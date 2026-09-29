@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gaboexatec - Juego de Examen</title>
+<style>
+  *{box-sizing:border-box}
+  body{
+    margin:0;font-family:Arial,Helvetica,sans-serif;
+    background:linear-gradient(135deg,#f4f7fb,#e8eef8);
+    color:#1f2937;min-height:100vh;
+  }
+  .app{max-width:760px;margin:auto;padding:18px}
+  .header{
+    background:#b91c1c;color:white;border-radius:18px;padding:20px;
+    box-shadow:0 8px 24px rgba(0,0,0,.12);margin-bottom:16px
+  }
+  .header h1{margin:0 0 6px;font-size:27px}
+  .header p{margin:0;opacity:.92}
+  .progress{height:10px;background:#e5e7eb;border-radius:99px;overflow:hidden;margin:14px 0}
+  .bar{height:100%;background:#16a34a;width:0%;transition:.25s}
+  .card{
+    background:white;border-radius:18px;padding:22px;
+    box-shadow:0 6px 22px rgba(0,0,0,.09)
+  }
+  .number{font-weight:bold;color:#b91c1c;margin-bottom:12px}
+  .question{font-size:20px;line-height:1.45;font-weight:700;margin:0 0 20px}
+  .option{
+    display:flex;align-items:flex-start;gap:12px;padding:15px;margin:10px 0;
+    border:2px solid #e5e7eb;border-radius:14px;cursor:pointer;
+    transition:.15s;background:#fff
+  }
+  .option:hover{border-color:#94a3b8;background:#f8fafc}
+  .option.selected{border-color:#2563eb;background:#eff6ff}
+  .letter{
+    width:30px;height:30px;min-width:30px;border-radius:50%;
+    background:#e5e7eb;display:flex;align-items:center;justify-content:center;
+    font-weight:bold
+  }
+  .selected .letter{background:#2563eb;color:white}
+  .text{line-height:1.4}
+  .actions{display:flex;justify-content:space-between;gap:10px;margin-top:20px}
+  button{
+    border:0;border-radius:12px;padding:13px 20px;font-size:16px;
+    font-weight:bold;cursor:pointer
+  }
+  .primary{background:#b91c1c;color:white;flex:1}
+  .secondary{background:#e5e7eb;color:#111827}
+  button:disabled{opacity:.45;cursor:not-allowed}
+  .result-title{text-align:center;font-size:27px;margin-top:0}
+  .score{text-align:center;font-size:22px;font-weight:bold;margin:10px 0 22px}
+  .review{
+    border:1px solid #e5e7eb;border-radius:14px;padding:15px;margin:12px 0;
+    background:#fafafa
+  }
+  .review.correct{border-left:6px solid #16a34a}
+  .review.wrong{border-left:6px solid #dc2626}
+  .review h3{font-size:16px;line-height:1.4;margin:0 0 10px}
+  .answer{margin:6px 0;line-height:1.4}
+  .correctText{color:#15803d;font-weight:bold}
+  .wrongText{color:#b91c1c;font-weight:bold}
+  .note{font-size:13px;color:#6b7280;margin-top:8px}
+  @media(max-width:520px){
+    .app{padding:10px}.card{padding:16px}.question{font-size:18px}
+    .option{padding:13px}.actions{flex-direction:column}
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="header">
+    <h1>GABOEXATEC</h1>
+    <p>Juego de preguntas — selecciona una respuesta en cada pregunta.</p>
+    <div class="progress"><div class="bar" id="bar"></div></div>
+    <div id="counter"></div>
+  </div>
+
+  <div id="game" class="card"></div>
+</div>
+
+<script>
+const questions = [
+  {
+    q:"¿Qué impacto tiene la subvaluación de los inventarios en la utilidad de la empresa?",
+    o:[
+      "A menor inventario, menor costo y menor utilidad",
+      "A menor inventario, mayor costo y mayor utilidad",
+      "A menor inventario, mayor costo y menor utilidad",
+      "A menor inventario, menor costo y mayor utilidad"
+    ], a:2
+  },
+  {
+    q:"En sesión del Consejo Técnico-Pedagógico, el Rector critica su gestión de taller por baja tasa de aprobación, omitiendo que solicitudes de insumos y mantenimiento no fueron atendidas. ¿Cuál es la acción más adecuada para demostrar autorregulación emocional?",
+    o:[
+      "Detallar cronológicamente las solicitudes responsabilizando a la administración.",
+      "Expresar descontento y solicitar suspensión de la reunión hasta contar con mediador.",
+      "Aceptar la observación sin comentarios para evitar escalamiento.",
+      "Mantener postura equilibrada, validar la preocupación y responder de manera constructiva."
+    ], a:3,
+    note:"La opción d fue tomada de la parte visible de la fotografía; el texto final de la opción aparece cortado en la imagen original."
+  },
+  {
+    q:"En el contexto del activo disponible de una empresa, ¿cómo se considera la moneda extranjera que posee?",
+    o:["Equivalentes de efectivo","Efectivo restringido","Inversiones temporales","Efectivo"], a:3
+  },
+  {
+    q:"¿Cómo se clasifican los tributos en Bolivia?",
+    o:[
+      "Impuestos, tasas, contribuciones especiales y patentes",
+      "Impuestos nacionales y regionales",
+      "Tasas, impuestos y patentes",
+      "Impuestos nacionales, departamentales y municipales"
+    ], a:0
+  },
+  {
+    q:"¿En qué tipo de sociedad comercial las obligaciones están garantizadas por la responsabilidad ilimitada y solidaria de todos los socios?",
+    o:[
+      "Sociedad de Responsabilidad Limitada",
+      "Sociedad Anónima",
+      "Sociedad Colectiva",
+      "Asociación accidental"
+    ], a:2
+  },
+  {
+    q:"¿Qué actividades económicas pertenecen al Régimen Tributario Simplificado?",
+    o:[
+      "Transporte público urbano e interprovincial",
+      "Artesanos, tiendas de barrio y comercio minorista",
+      "Comerciantes minoristas, vivanderos y artesanos",
+      "Comerciantes minoristas, transporte público y artesanos"
+    ], a:2
+  },
+  {
+    q:"Según los principios de contabilidad generalmente aceptados, ¿qué principio implica que las transacciones deben registrarse en el momento en que ocurren, independientemente del flujo de efectivo?",
+    o:["Uniformidad","Valuación al costo","Devengado","Realización"], a:2
+  },
+  {
+    q:"Según la Ley General del Trabajo, ¿cuál es la jornada laboral máxima para mujeres?",
+    o:["35 horas semanales","48 horas semanales","42 horas semanales","40 horas semanales"], a:3
+  },
+  {
+    q:"¿Cómo se obtiene el costo primo dentro de la contabilidad de costos?",
+    o:[
+      "Costo de materiales directos y los costos indirectos de fabricación",
+      "Costo de oportunidad y costos de producción",
+      "Costo de materiales directos y costo de la mano de obra directa",
+      "Costo de materiales directos y los costos de producción"
+    ], a:2
+  },
+  {
+    q:"¿Cómo se calcula la liquidación del aguinaldo?",
+    o:[
+      "Promedio del total ganado de los últimos 3 meses",
+      "Promedio del total ganado de los 12 meses del año",
+      "Total ganado del último mes",
+      "Promedio del total ganado de los últimos 2 meses"
+    ], a:0
+  },
+  {
+    q:"¿Cuáles son los modos de giro de una letra de cambio?",
+    o:[
+      "A la fecha, al vencimiento, a días o meses fecha",
+      "A días o meses vista, a días o meses fecha, a la fecha, a la exigencia del beneficiario",
+      "Sólo a la fecha definida en el documento",
+      "A la vista, a días o meses vista, a días o meses fecha, a la fecha"
+    ], a:3
+  }
+];
+
+let current=0;
+let answers=new Array(questions.length).fill(null);
+
+function render(){
+  const item=questions[current];
+  document.getElementById("counter").textContent=`Pregunta ${current+1} de ${questions.length}`;
+  document.getElementById("bar").style.width=`${((current+1)/questions.length)*100}%`;
+
+  let options="";
+  item.o.forEach((txt,i)=>{
+    const selected=answers[current]===i ? " selected":"";
+    options+=`
+      <div class="option${selected}" onclick="selectOption(${i})">
+        <div class="letter">${String.fromCharCode(65+i)}</div>
+        <div class="text">${txt}</div>
+      </div>`;
+  });
+
+  document.getElementById("game").innerHTML=`
+    <div class="number">Pregunta ${current+1}</div>
+    <p class="question">${item.q}</p>
+    ${options}
+    ${item.note ? `<div class="note">⚠️ ${item.note}</div>` : ""}
+    <div class="actions">
+      <button class="secondary" onclick="prev()" ${current===0?"disabled":""}>Anterior</button>
+      <button class="primary" onclick="next()" ${answers[current]===null?"disabled":""}>
+        ${current===questions.length-1 ? "Aceptar y ver resultados" : "Aceptar y continuar"}
+      </button>
+    </div>
+  `;
+}
+
+function selectOption(i){
+  answers[current]=i;
+  render();
+}
+
+function prev(){
+  if(current>0){current--;render();}
+}
+
+function next(){
+  if(answers[current]===null)return;
+  if(current<questions.length-1){current++;render();}
+  else showResults();
+}
+
+function showResults(){
+  let score=0;
+  questions.forEach((q,i)=>{if(answers[i]===q.a)score++;});
+  document.getElementById("counter").textContent="Resultado final";
+  document.getElementById("bar").style.width="100%";
+
+  let html=`
+    <h2 class="result-title">✅ Resultado final</h2>
+    <div class="score">${score} de ${questions.length} respuestas correctas</div>
+    <p style="text-align:center">Aquí aparecen todas las respuestas correctas.</p>
+  `;
+
+  questions.forEach((q,i)=>{
+    const ok=answers[i]===q.a;
+    const selected=answers[i]===null ? "Sin respuesta" : `${String.fromCharCode(65+answers[i])}. ${q.o[answers[i]]}`;
+    const correct=`${String.fromCharCode(65+q.a)}. ${q.o[q.a]}`;
+    html+=`
+      <div class="review ${ok?"correct":"wrong"}">
+        <h3>${i+1}. ${q.q}</h3>
+        <div class="answer ${ok?"correctText":"wrongText"}">${ok?"✅ Correcta":"❌ Incorrecta"}</div>
+        <div class="answer">Tu respuesta: <b>${selected}</b></div>
+        <div class="answer correctText">Respuesta correcta: <b>${correct}</b></div>
+      </div>`;
+  });
+
+  html+=`<button class="primary" onclick="restart()" style="width:100%;margin-top:10px">🔄 Volver a jugar</button>`;
+  document.getElementById("game").innerHTML=html;
+}
+
+function restart(){
+  current=0;
+  answers=new Array(questions.length).fill(null);
+  render();
+}
+
+render();
+</script>
+</body>
+</html>
